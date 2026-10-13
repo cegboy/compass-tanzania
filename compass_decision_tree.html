@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COMPASS: where do we start?</title>
+<style>
+  body { margin: 0; background: #ffffff; }
+  @media (prefers-color-scheme: dark) { body { background: #1d1d1b; } }
+
+  .compass-tree {
+    --ct-bg: #ffffff; --ct-surface: #f6f5f0; --ct-text: #1f1f1d; --ct-muted: #5a5954;
+    --ct-border: #d6d4ca; --ct-accent: #0f6e56; --ct-accent-bg: #e1f5ee; --ct-accent-text: #085041;
+    --ct-warn-bg: #faeeda; --ct-warn-border: #ba7517; --ct-warn-text: #633806; --ct-focus: #534ab7;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ct-text); background: var(--ct-bg);
+    max-width: 720px; margin: 0 auto; padding: 24px 16px 40px;
+    line-height: 1.55; box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    .compass-tree {
+      --ct-bg: #1d1d1b; --ct-surface: #2a2a27; --ct-text: #ecebe5; --ct-muted: #b3b1a8;
+      --ct-border: #47463f; --ct-accent: #5dcaa5; --ct-accent-bg: #04342c; --ct-accent-text: #9fe1cb;
+      --ct-warn-bg: #412402; --ct-warn-border: #ef9f27; --ct-warn-text: #fac775; --ct-focus: #afa9ec;
+    }
+  }
+  .compass-tree *, .compass-tree *::before, .compass-tree *::after { box-sizing: border-box; }
+  .compass-tree h1 { font-size: 24px; font-weight: 500; margin: 0 0 8px; }
+  .compass-tree h2 { font-size: 20px; font-weight: 500; margin: 4px 0 8px; }
+  .compass-tree h3 { font-size: 16px; font-weight: 500; margin: 24px 0 8px; }
+  .compass-tree p { margin: 0 0 12px; }
+  .ct-intro { color: var(--ct-muted); margin-bottom: 20px; }
+  .ct-eyebrow { font-size: 13px; color: var(--ct-muted); margin: 0; }
+  .ct-help { color: var(--ct-muted); font-size: 15px; }
+  .ct-card { background: var(--ct-bg); border: 1px solid var(--ct-border); border-radius: 12px; padding: 20px; }
+  .ct-option {
+    display: block; width: 100%; text-align: left; font: inherit; color: inherit;
+    background: var(--ct-surface); border: 1px solid var(--ct-border); border-radius: 10px;
+    padding: 14px 16px; margin: 0 0 10px; cursor: pointer;
+  }
+  .ct-option:hover { border-color: var(--ct-accent); }
+  .ct-btn {
+    font: inherit; font-size: 14px; color: var(--ct-text); background: transparent;
+    border: 1px solid var(--ct-border); border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  }
+  .ct-btn:hover { border-color: var(--ct-accent); }
+  .ct-btn.primary { background: var(--ct-accent-bg); color: var(--ct-accent-text); border-color: var(--ct-accent); }
+  .compass-tree button:focus-visible, .compass-tree summary:focus-visible, .compass-tree h2:focus-visible {
+    outline: 3px solid var(--ct-focus); outline-offset: 2px;
+  }
+  .compass-tree h2:focus { outline: none; }
+  .ct-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 24px; }
+  .ct-status { font-size: 14px; color: var(--ct-muted); }
+  .ct-trail { margin: 20px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--ct-muted); }
+  .ct-trail li { padding: 6px 0; border-top: 1px solid var(--ct-border); }
+  .ct-trail strong { font-weight: 500; color: var(--ct-text); }
+  .ct-list { margin: 0 0 8px; padding-left: 20px; }
+  .ct-list li { margin-bottom: 8px; }
+  .ct-notice {
+    background: var(--ct-warn-bg); color: var(--ct-warn-text); border-left: 4px solid var(--ct-warn-border);
+    padding: 12px 14px; margin: 16px 0; border-radius: 0;
+  }
+  .ct-pill {
+    display: inline-block; font-size: 13px; padding: 2px 10px; border-radius: 999px;
+    background: var(--ct-accent-bg); color: var(--ct-accent-text); margin-bottom: 6px;
+  }
+  .compass-tree details { margin-top: 28px; border-top: 1px solid var(--ct-border); padding-top: 14px; }
+  .compass-tree summary { cursor: pointer; font-weight: 500; }
+  .ct-footer { margin-top: 32px; font-size: 13px; color: var(--ct-muted); }
+</style>
+</head>
+<body>
+<div class="compass-tree" id="compass-tree">
+  <h1>COMPASS: where do we start?</h1>
+  <p class="ct-intro" style="margin-top:-4px"><em>Conservation Objectives and Multiple-benefit Prioritisation Across Spatial Scenarios</em></p>
+  <p class="ct-intro">Answer a few questions about your situation to see which COMPASS pathway fits and what you could expect to receive. It takes about two minutes.</p>
+  <div id="compass-tree-app" class="ct-card"></div>
+  <p class="ct-footer">An illustrative guide. COMPASS: Conservation Objectives and Multiple-benefit Prioritisation Across Spatial Scenarios supports transparent, revisable decisions with partners. It does not produce an automatic conservation plan or a single correct map, and the outputs listed are what a project would aim to deliver, agreed case by case.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------
+     Content. Edit the questions, options and outcomes here.
+     Each option can set flags (set) and points to the next node (next).
+     ------------------------------------------------------------------ */
+  var TREE = {
+    start: "q1",
+    questions: {
+      q1: {
+        text: "What decision will the prioritisation inform?",
+        help: "The answer sets the scenarios we compare and what the outputs measure.",
+        options: [
+          { label: "Where to create or expand protected areas", set: { purpose: "protect" }, next: "q2" },
+          { label: "A broader mix: protection, restoration, sustainable use, connectivity and ecosystem services", set: { purpose: "mix" }, next: "q2" },
+          { label: "Reporting progress against national targets", set: { purpose: "report" }, next: "q2" },
+          { label: "We are not sure yet", set: { purpose: "unsure" }, next: "scoping" }
+        ]
+      },
+      q2: {
+        text: "Where are decisions about land and conservation made?",
+        help: "This decides whether results are summarised for local areas as well as for the whole country.",
+        options: [
+          { label: "At national level only", set: { local: false }, next: "q3" },
+          { label: "Nationally and in local administrative areas, such as wards or districts", set: { local: true }, next: "q3" }
+        ]
+      },
+      q3: {
+        text: "What data can you share?",
+        help: "Licences decide what can be bundled, what users must fetch themselves, and what can be published.",
+        options: [
+          { label: "National species, land-cover or ecosystem-service data, with permission to reuse it", set: { data: "national" }, next: "q4" },
+          { label: "National data, but with restrictions on reuse or publication", set: { data: "restricted" }, next: "q4" },
+          { label: "Little or none: start from open global data", set: { data: "open" }, next: "q4" }
+        ]
+      },
+      q4: {
+        text: "Are official protected-area boundaries available and agreed?",
+        help: "Protected areas are usually kept as a fixed starting point, so inconsistent records change the results.",
+        options: [
+          { label: "Yes, one authoritative version", set: { boundaries: "ok" }, next: "q5" },
+          { label: "Partly, or international and national records disagree", set: { boundaries: "unclear" }, next: "boundaries" }
+        ]
+      },
+      q5: {
+        text: "Will communities, scientists and resource users help set objectives and review scenarios?",
+        help: "COMPASS is designed for shared, revisable decisions, so who reviews the scenarios matters.",
+        options: [
+          { label: "Yes, this is planned", set: { people: "yes" }, next: "participatory" },
+          { label: "Possibly, but not arranged yet", set: { people: "later" }, next: "participatory" },
+          { label: "No, this is a technical exercise", set: { people: "no" }, next: "technical" }
+        ]
+      }
+    },
+    leaves: {
+      participatory: {
+        pill: "Full pathway",
+        title: "Participatory prioritisation",
+        lead: "This is the pathway COMPASS is designed for. You set objectives, we compare scenarios, and partners review them before anything is used to make a decision.",
+        next: "Hold a short objectives workshop with your partners, agree two or three scenarios to compare, then we configure and run the pipeline."
+      },
+      technical: {
+        pill: "Full pathway, with a gap",
+        title: "Technical analysis with a participation gap",
+        lead: "COMPASS can produce the analysis, but without local and expert input the results would be options for discussion, not agreed priorities.",
+        next: "Add a review step with partners and specialists, even a short one, before anyone uses the results."
+      },
+      boundaries: {
+        pill: "Start here",
+        title: "Resolve boundaries first",
+        lead: "Protected-area records sit at the base of the analysis. If sources disagree, every scenario inherits the problem, so it is better to settle them before anything else.",
+        next: "Ask the authoritative provider to confirm the records, then return to this guide."
+      },
+      scoping: {
+        pill: "Start here",
+        title: "Scoping workshop first",
+        lead: "If the decision is not yet clear, a prioritisation will not help. A short scoping step settles what is being decided before any analysis starts.",
+        next: "Hold a scoping conversation to settle the decision, the targets, the boundary and who needs to be involved."
+      }
+    }
+  };
+
+  /* ------------------------------------------------------------------
+     Outputs and requirements are composed from the answers.
+     ------------------------------------------------------------------ */
+  function purposeOutput(f) {
+    if (f.purpose === "protect") return "Scenarios comparing options to expand protection around existing protected areas";
+    if (f.purpose === "mix") return "Maps showing where protection, restoration, sustainable use, connectivity and ecosystem services (such as carbon, water, grazing, hazard mitigation and tourism) could each contribute, with the trade-offs between them (connectivity results are illustrative and need local review)";
+    if (f.purpose === "report") return "Coverage figures for species and ecosystem services under current and scenario protection, set against your targets";
+    return null;
+  }
+
+  function dataOutput(f) {
+    if (f.data === "national") return "Your national layers used alongside open global data, after a licence check";
+    if (f.data === "restricted") return "A licence-aware build: restricted layers stay with you, and published outputs include only what the terms allow";
+    if (f.data === "open") return "A first run from open global data only, with your specialists reviewing species coverage";
+    return null;
+  }
+
+  function fullOutputs(f) {
+    var o = [];
+    var p = purposeOutput(f);
+    if (p) o.push(p);
+    o.push("National priority maps for each scenario you agree, with the options compared side by side");
+    o.push("Trade-off tables showing what each scenario gains or gives up for species and ecosystem services");
+    if (f.local) o.push("Summaries for each local administrative area: what each could contribute, as a basis for discussion rather than an agreed action score");
+    var d = dataOutput(f);
+    if (d) o.push(d);
+    o.push("A reproducible data package and an interactive web map, precomputed and ready to host");
+    o.push("A provenance and licence record for every dataset used");
+    return o;
+  }
+
+  function needs(f, leafId) {
+    var n = [];
+    if (leafId === "scoping") {
+      n.push("Time with the people who commission and use the results");
+      n.push("Any existing national strategy, targets or planning documents");
+      n.push("A list of the agencies and groups who should be involved");
+      return n;
+    }
+    if (leafId === "boundaries") {
+      n.push("The protected-area records you hold, and where each came from");
+      n.push("A named contact who can confirm disputed or missing sites");
+      n.push("The authoritative provider's current version, if there is one");
+      return n;
+    }
+    n.push("A statement of objectives and any formal targets");
+    n.push("The official national boundary" + (f.local ? " and the administrative-unit layer used for planning" : ""));
+    n.push("Official protected-area boundaries and any areas that must be retained or excluded");
+    if (f.data === "national") n.push("Your national datasets, with documentation and reuse terms");
+    if (f.data === "restricted") n.push("The terms for each restricted dataset and who can grant permission");
+    if (f.data === "open") n.push("Named specialists to review the species list and flag gaps");
+    n.push("Named partners who will review the scenarios");
+    return n;
+  }
+
+  function outputsFor(leafId, f) {
+    if (leafId === "scoping") {
+      return [
+        "A short written scope: the decision, targets, boundary, planning units and partners",
+        "A draft configuration with the unknowns clearly marked",
+        "A data inventory and a list of licence questions to resolve"
+      ];
+    }
+    if (leafId === "boundaries") {
+      return [
+        "A boundary discrepancy report listing site IDs, projection checks and differences between sources",
+        "Options for the retained-area rule, showing how each one changes the results",
+        "Once boundaries are agreed, the full set of outputs from the participatory pathway"
+      ];
+    }
+    return fullOutputs(f);
+  }
+
+  function cautionsFor(leafId, f) {
+    var c = [];
+    if (leafId === "participatory" && f.people === "later") {
+      c.push("Plan the participation step before outputs are used for decisions. Scenarios agreed only by technical staff are easier to challenge.");
+    }
+    if (leafId === "technical") {
+      c.push("Without local and expert review, scenarios may miss what matters to the people affected. Treat the outputs as options for discussion.");
+    }
+    if ((leafId === "participatory" || leafId === "technical") && f.purpose === "mix") {
+      c.push("Connectivity and patch-role results show where links could matter, not proven movement or population support. They need local ecological review.");
+      c.push("Ecosystem-service results are represented indices built from mapped data, not measured benefits or physical gains. Check them with local users of each service.");
+    }
+    return c;
+  }
+
+  /* ------------------------------------------------------------------
+     Rendering
+     ------------------------------------------------------------------ */
+  var root = document.getElementById("compass-tree-app");
+  var current = TREE.start;
+  var flags = { local: false };
+  var trail = [];
+
+  function h(tag, props) {
+    var el = document.createElement(tag);
+    var key;
+    props = props || {};
+    for (key in props) {
+      if (!Object.prototype.hasOwnProperty.call(props, key)) continue;
+      var v = props[key];
+      if (key === "class") el.className = v;
+      else if (key.indexOf("on") === 0) el.addEventListener(key.slice(2), v);
+      else if (v !== false && v !== null && v !== undefined) el.setAttribute(key, v);
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var kids = [].concat(arguments[i]);
+      for (var j = 0; j < kids.length; j++) {
+        var c = kids[j];
+        if (c === null || c === undefined || c === false) continue;
+        el.appendChild(typeof c === "object" ? c : document.createTextNode(c));
+      }
+    }
+    return el;
+  }
+
+  function list(items) {
+    return h.apply(null, ["ul", { "class": "ct-list" }].concat(items.map(function (t) { return h("li", null, t); })));
+  }
+
+  function trailView() {
+    if (!trail.length) return null;
+    var items = trail.map(function (t) {
+      return h("li", null, TREE.questions[t.id].text + " ", h("strong", null, t.answer));
+    });
+    return h("div", null,
+      h("h3", null, "Your answers so far"),
+      h.apply(null, ["ul", { "class": "ct-trail" }].concat(items)));
+  }
+
+  function setRoot(items) {
+    var flat = [].concat.apply([], items).filter(function (x) {
+      return x !== null && x !== undefined && x !== false;
+    });
+    root.replaceChildren.apply(root, flat);
+  }
+
+  function choose(option) {
+    trail.push({ id: current, answer: option.label, prev: JSON.parse(JSON.stringify(flags)) });
+    var k;
+    for (k in option.set) flags[k] = option.set[k];
+    current = option.next;
+    render();
+  }
+
+  function back() {
+    var t = trail.pop();
+    if (!t) return;
+    flags = t.prev;
+    current = t.id;
+    render();
+  }
+
+  function restart() {
+    trail = [];
+    flags = { local: false };
+    current = TREE.start;
+    render();
+  }
+
+  function renderQuestion(q) {
+    var heading = h("h2", { id: "ct-heading", tabindex: "-1" }, q.text);
+    var opts = h("div", { role: "group", "aria-labelledby": "ct-heading" },
+      q.options.map(function (o) {
+        return h("button", { type: "button", "class": "ct-option", onclick: function () { choose(o); } }, o.label);
+      }));
+    setRoot([
+      h("p", { "class": "ct-eyebrow" }, "Question " + (trail.length + 1)),
+      heading,
+      h("p", { "class": "ct-help" }, q.help),
+      opts,
+      trailView(),
+      trail.length ? h("div", { "class": "ct-actions" },
+        h("button", { type: "button", "class": "ct-btn", onclick: back }, "Back"),
+        h("button", { type: "button", "class": "ct-btn", onclick: restart }, "Start again")) : null
+    ]);
+    return heading;
+  }
+
+  function summaryText(leafId, leaf) {
+    var lines = ["COMPASS pathway: " + leaf.title, ""];
+    if (trail.length) {
+      lines.push("Your answers:");
+      trail.forEach(function (t) { lines.push("- " + TREE.questions[t.id].text + " " + t.answer); });
+      lines.push("");
+    }
+    lines.push("Possible outputs:");
+    outputsFor(leafId, flags).forEach(function (o) { lines.push("- " + o); });
+    lines.push("", "What we would need from you:");
+    needs(flags, leafId).forEach(function (n) { lines.push("- " + n); });
+    lines.push("", "Suggested next step: " + leaf.next);
+    return lines.join("\n");
+  }
+
+  function renderLeaf(leafId) {
+    var leaf = TREE.leaves[leafId];
+    var heading = h("h2", { id: "ct-heading", tabindex: "-1" }, leaf.title);
+    var status = h("span", { "class": "ct-status", role: "status" });
+    var cautions = cautionsFor(leafId, flags).map(function (c) { return h("div", { "class": "ct-notice" }, c); });
+
+    var allOutcomes = Object.keys(TREE.leaves).map(function (id) {
+      return h("li", null, h("strong", null, TREE.leaves[id].title + ": "), TREE.leaves[id].lead);
+    });
+
+    setRoot([
+      h("span", { "class": "ct-pill" }, leaf.pill),
+      heading,
+      h("p", null, leaf.lead),
+      cautions,
+      h("h3", null, "Possible outputs"),
+      list(outputsFor(leafId, flags)),
+      h("h3", null, "What we would need from you"),
+      list(needs(flags, leafId)),
+      h("h3", null, "Suggested next step"),
+      h("p", null, leaf.next),
+      trailView(),
+      h("div", { "class": "ct-actions" },
+        h("button", { type: "button", "class": "ct-btn", onclick: back }, "Back"),
+        h("button", { type: "button", "class": "ct-btn", onclick: restart }, "Start again"),
+        h("button", { type: "button", "class": "ct-btn primary", onclick: function () {
+          var text = summaryText(leafId, leaf);
+          try {
+            navigator.clipboard.writeText(text).then(
+              function () { status.textContent = "Summary copied."; },
+              function () { status.textContent = "Copying is not available in this browser."; });
+          } catch (e) {
+            status.textContent = "Copying is not available in this browser.";
+          }
+        } }, "Copy summary"),
+        status),
+      h("details", null,
+        h("summary", null, "See all possible outcomes"),
+        h.apply(null, ["ul", { "class": "ct-list", style: "margin-top:12px" }].concat(allOutcomes)))
+    ]);
+    return heading;
+  }
+
+  function render() {
+    var heading;
+    if (TREE.questions[current]) heading = renderQuestion(TREE.questions[current]);
+    else heading = renderLeaf(current);
+    if (trail.length) heading.focus();
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
